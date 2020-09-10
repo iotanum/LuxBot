@@ -5,6 +5,7 @@ from cogs import twitter_henti
 import traceback
 import asyncio
 import random
+import os
 
 
 class Task(commands.Cog):
@@ -31,10 +32,38 @@ class Task(commands.Cog):
                 await channel.send(tweet_url)
                 await asyncio.sleep(random.randint(1, 3))
 
-    @commands.command(brief="Lock a channel where the bot is gonna post.", aliases=['h'])
+    async def _update_read_tracked_channels_in_file(self, update=False):
+        if not os.path.exists('channels.txt'):
+            with open('channels.txt', 'w'): pass
+
+        if update:
+            with open('channels.txt', 'w') as file:
+                file.write(",".join(str(channel) for channel in self.tracked_channels))
+
+        else:
+            with open('channels.txt', 'r') as file:
+                channels = file.read()
+
+                if channels == '':
+                    self.tracked_channels = []
+                    return
+
+                self.tracked_channels = channels.split(",")
+
+    @commands.command(brief="Lock a channel where Lux is gonna post.")
     async def here(self, ctx):
         if ctx.channel.id not in self.tracked_channels:
             self.tracked_channels.append(ctx.channel.id)
+            print(self.tracked_channels)
+            await self._update_read_tracked_channels_in_file(update=True)
+            print(f"Tracking in: {len(self.tracked_channels)} channels.")
+            await ctx.message.add_reaction('\U0001f44d')
+
+    @commands.command(brief="Remove channel from tracked list.")
+    async def nothere(self, ctx):
+        if ctx.channel.id in self.tracked_channels:
+            self.tracked_channels.remove(ctx.channel.id)
+            await self._update_read_tracked_channels_in_file(update=True)
             print(f"Tracking in: {len(self.tracked_channels)} channels.")
             await ctx.message.add_reaction('\U0001f44d')
 
@@ -44,6 +73,7 @@ class Task(commands.Cog):
     @tasks.loop(minutes=15, reconnect=True)
     async def background_task(self):
         try:
+            print(self.tracked_channels)
             if len(self.tracked_channels) >= 1:
                 gathered_tweets = await self.twitter.get_all_henti_tweets()
 
@@ -77,6 +107,7 @@ class Task(commands.Cog):
     @background_task.before_loop
     async def before_printer(self):
         await self.bot.wait_until_ready()
+        await self._update_read_tracked_channels_in_file()
         print(f"Logged in as {self.bot.user}.")
 
 
