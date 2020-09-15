@@ -20,27 +20,6 @@ class Task(commands.Cog):
 
         self.background_task.start()
 
-    async def log_fatal_error_to_creator_dm(self):
-        creator_discord_id = 450567441437687818
-
-        try:
-            await self.bot.get_user(creator_discord_id).send(f"```{traceback.format_exc()}```\n")
-
-        except discord.errors.HTTPException:
-            traceback_error = traceback.format_exc().split('Traceback')
-            api_response = traceback_error[0][-1000:]
-            api_response = traceback_error[1][-1000:] if api_response is "" else api_response
-
-            await self.bot.get_user(creator_discord_id).send(f"```{api_response}```\n")
-
-    async def send_henti_tweets_to_channel(self, tweets):
-        for channel_id in self.tracked_channels:
-            channel = self.bot.get_channel(int(channel_id))
-
-            for tweet_url in tweets:
-                await channel.send(tweet_url)
-                await asyncio.sleep(random.randint(1, 3))
-
     async def _update_read_tracked_channels_in_file(self, update=False):
         if not os.path.exists('channels.txt'):
             with open('channels.txt', 'w'): pass
@@ -57,27 +36,32 @@ class Task(commands.Cog):
                     self.tracked_channels = []
                     return
 
-                self.tracked_channels = channels.split(",")
-
-    @commands.command(brief="Lock a channel where Lux is gonna post.")
-    async def here(self, ctx):
-        if ctx.channel.id not in self.tracked_channels:
-            self.tracked_channels.append(ctx.channel.id)
-            print(self.tracked_channels)
-            await self._update_read_tracked_channels_in_file(update=True)
-            print(f"Tracking in: {len(self.tracked_channels)} channels.")
-            await ctx.message.add_reaction('\U0001f44d')
-
-    @commands.command(brief="Remove channel from tracked list.")
-    async def nothere(self, ctx):
-        if ctx.channel.id in self.tracked_channels:
-            self.tracked_channels.remove(ctx.channel.id)
-            await self._update_read_tracked_channels_in_file(update=True)
-            print(f"Tracking in: {len(self.tracked_channels)} channels.")
-            await ctx.message.add_reaction('\U0001f44d')
+                list_of_channels = channels.split(",")
+                self.tracked_channels = [int(channel) for channel in list_of_channels]
 
     async def _reset_gathered_tweets(self):
         self.twitter.gathered_tweets['tweet_urls'] = []
+
+    async def _log_fatal_error_to_creator_dm(self):
+        creator_discord_id = 450567441437687818
+
+        try:
+            await self.bot.get_user(creator_discord_id).send(f"```{traceback.format_exc()}```\n")
+
+        except discord.errors.HTTPException:
+            traceback_error = traceback.format_exc().split('Traceback')
+            api_response = traceback_error[0][-1000:]
+            api_response = traceback_error[1][-1000:] if api_response is "" else api_response
+
+            await self.bot.get_user(creator_discord_id).send(f"```{api_response}```\n")
+
+    async def send_henti_tweets_to_channel(self, tweets):
+        for channel_id in self.tracked_channels:
+            channel = self.bot.get_channel(channel_id)
+
+            for tweet_url in tweets:
+                await channel.send(tweet_url)
+                await asyncio.sleep(random.randint(1, 3))
 
     @tasks.loop(minutes=15, reconnect=True)
     async def background_task(self):
@@ -110,13 +94,30 @@ class Task(commands.Cog):
                 await self._reset_gathered_tweets()
 
         except Exception as e:
-            await self.log_fatal_error_to_creator_dm()
+            await self._log_fatal_error_to_creator_dm()
 
     @background_task.before_loop
     async def before_printer(self):
         await self.bot.wait_until_ready()
         await self._update_read_tracked_channels_in_file()
         print(f"Logged in as {self.bot.user}.")
+
+    @commands.command(brief="Lock a channel where Lux is gonna post.")
+    async def here(self, ctx):
+        if ctx.channel.id not in self.tracked_channels:
+            self.tracked_channels.append(ctx.channel.id)
+            print(self.tracked_channels)
+            await self._update_read_tracked_channels_in_file(update=True)
+            print(f"Tracking in: {len(self.tracked_channels)} channels.")
+            await ctx.message.add_reaction('\U0001f44d')
+
+    @commands.command(brief="Remove channel from tracked list.")
+    async def nothere(self, ctx):
+        if ctx.channel.id in self.tracked_channels:
+            self.tracked_channels.remove(ctx.channel.id)
+            await self._update_read_tracked_channels_in_file(update=True)
+            print(f"Tracking in: {len(self.tracked_channels)} channels.")
+            await ctx.message.add_reaction('\U0001f44d')
 
 
 def setup(bot):
