@@ -35,7 +35,7 @@ class Task(commands.Cog):
 
     async def send_henti_tweets_to_channel(self, tweets):
         for channel_id in self.tracked_channels:
-            channel = self.bot.get_channel(channel_id)
+            channel = self.bot.get_channel(int(channel_id))
 
             for tweet_url in tweets:
                 await channel.send(tweet_url)
@@ -102,7 +102,6 @@ class Task(commands.Cog):
                     sleep_timer = 30 * random.randint(120, 320)
                     print(f"More than enough, sending in. Sleeping {sleep_timer}s")
 
-                # Sleep a random timer from 1h to 3h
                 await asyncio.sleep(sleep_timer)
                 print(f"Slept {sleep_timer}s. "
                       f"{f'Posted {len(self.batch_of_tweets)} tweets.' if len(self.batch_of_tweets) >= 10 else ''}")
