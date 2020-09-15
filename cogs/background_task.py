@@ -1,4 +1,5 @@
 from discord.ext import tasks, commands
+import discord
 
 from cogs import twitter_henti
 
@@ -22,7 +23,15 @@ class Task(commands.Cog):
     async def log_fatal_error_to_creator_dm(self):
         creator_discord_id = 450567441437687818
 
-        await self.bot.get_user(creator_discord_id).send(f"```{traceback.format_exc()}```\n")
+        try:
+            await self.bot.get_user(creator_discord_id).send(f"```{traceback.format_exc()}```\n")
+
+        except discord.errors.HTTPException:
+            traceback_error = traceback.format_exc().split('Traceback')
+            api_response = traceback_error[0][-1000:]
+            api_response = traceback_error[1][-1000:] if api_response is "" else api_response
+
+            await self.bot.get_user(creator_discord_id).send(f"```{api_response}```\n")
 
     async def send_henti_tweets_to_channel(self, tweets):
         for channel_id in self.tracked_channels:
