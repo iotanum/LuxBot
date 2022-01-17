@@ -1,3 +1,4 @@
 tweepy
 python-dotenv
 discord.py
+requests_html
