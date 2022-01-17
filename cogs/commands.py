@@ -9,7 +9,7 @@ class Commands(commands.Cog):
         self.bot = bot
         self.gbf_wiki = GbfWiki()
 
-    @commands.command(brief="Check GW predictions")
+    @commands.command(brief="Check GW predictions", aliases=['p', "predickt"])
     async def predict(self, ctx, tier: str):
         possible_predictions = ['t2k', 't80k', 't140k', 't180k', 't270k', 't370k']
         if tier in possible_predictions:
@@ -31,8 +31,7 @@ class Commands(commands.Cog):
                     embed.set_footer(text=predictions['Time'])
 
                     await ctx.send(embed=embed)
-        # await ctx.message.add_reaction('\U0001f44d')
-
+                    return
 
 
 def setup(bot):
