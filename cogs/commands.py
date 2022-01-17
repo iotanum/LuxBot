@@ -23,11 +23,11 @@ class Commands(commands.Cog):
                     tier_prediction["Current"] = tier_prediction.pop("CurrentCurrent GW's Honors")
                     tier_prediction["Prev_Ending"] = tier_prediction.pop("Prev EndingPrevious GW's Final Honors")
 
-                    embed = discord.Embed(title=f"__**Tier '{prediction}' Predictions**__", color=0x03f8fc)
-                    embed.add_field(name="Previous", value=tier_prediction["Previous"], inline=True)
-                    embed.add_field(name="Current", value=tier_prediction["Current"], inline=True)
-                    embed.add_field(name="Previous Ending", value=tier_prediction["Prev_Ending"], inline=False)
-                    embed.add_field(name="Prediction", value=tier_prediction["Prediction"])
+                    prev_curr_vs_current = f'{tier_prediction["Previous"]}/{tier_prediction["Current"]}'
+                    embed = discord.Embed(title=f"__**Tier '{prediction}' Predictions**__", color=0x03f8fc,
+                                          description=prev_curr_vs_current)
+                    embed.add_field(name="Previous Ending", value=tier_prediction["Prev_Ending"], inline=True)
+                    embed.add_field(name="Prediction", value=tier_prediction["Prediction"], inline=True)
                     embed.set_footer(text=predictions['Time'])
 
                     await ctx.send(embed=embed)
