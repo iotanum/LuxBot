@@ -66,6 +66,8 @@ class Task(commands.Cog):
     @tasks.loop(minutes=15, reconnect=True)
     async def background_task(self):
         try:
+            hour = 3600
+            rand_hour_sleep = random.randint(5, 10)
             print(self.tracked_channels)
             if len(self.tracked_channels) >= 1:
                 gathered_tweets = await self.twitter.get_all_henti_tweets()
@@ -83,7 +85,7 @@ class Task(commands.Cog):
                 if len(self.batch_of_tweets) >= 10:
                     await self.send_henti_tweets_to_channel(self.batch_of_tweets)
                     self.batch_of_tweets = []
-                    sleep_timer = 30 * random.randint(120, 320)
+                    sleep_timer = hour * rand_hour_sleep
                     print(f"More than enough, sending in. Sleeping {sleep_timer}s")
 
                 await asyncio.sleep(sleep_timer)
